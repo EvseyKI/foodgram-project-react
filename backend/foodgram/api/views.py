@@ -1,7 +1,7 @@
 import io
-
 from django.db.models import Q, Sum
 from django.http import HttpResponse
+from django_filters import rest_framework
 from djoser.views import TokenCreateView
 from rest_framework import permissions, status
 from rest_framework.decorators import action
@@ -9,14 +9,21 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from api.permissions import CheckPermissionsToUpdateAndDelete
-from api.serializers import (UserSerializer, UserSetPasswordSerializer,
-                             TagSerializer, IngredientSerializer,
-                             SubscribeSerializer, RecipeSerializer,
-                             FavoriteSerializer, ShoppingListSerializer,
-                             PostUpdateRecipeSerializer)
+from api.filters import RecipeFilter, IngredientFilter
+from api.permissions import IsAuthorPermissions
+from api.serializers import (
+    UserSerializer,
+    UserSetPasswordSerializer,
+    TagSerializer,
+    IngredientSerializer,
+    SubscribeSerializer,
+    RecipeSerializer,
+    FavoriteSerializer,
+    ShoppingListSerializer,
+    PostUpdateRecipeSerializer,
+)
 from recipes.models import (Tag, Ingredient, Recipe, Favorite, ShoppingList)
-from users.models import User, Subscription
+from users.models import (User, Subscription)
 
 
 class UserViewSet(ModelViewSet):
@@ -91,19 +98,17 @@ class IngredientViewSet(ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-
-    def list(self, request, *args, **kwargs):
-        if request.query_params.get('name', None):
-            self.queryset = self.queryset.filter(
-                name__icontains=request.query_params['name'])
-        return super().list(request)
+    filter_backends = (rest_framework.DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    permission_classes = [permissions.IsAuthenticated,
-                          CheckPermissionsToUpdateAndDelete]
+    permission_classes = (permissions.IsAuthenticated,
+                          IsAuthorPermissions,)
+    filter_backends = (rest_framework.DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def list(self, request):
         if int(request.query_params.get('is_favorited', -1)) == 1:

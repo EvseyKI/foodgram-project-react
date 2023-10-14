@@ -1,17 +1,63 @@
 version: '3.3'
 services:
-
+  db:
+    image: postgres:13.0-alpine
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - /var/lib/postgresql/data/
+    environment: 
+      POSTGRES_DB: evsey       # Имя базы данных 
+      POSTGRES_USER: admin     # Имя пользователя 
+      POSTGRES_PASSWORD: love9268  # Пароль 
+      POSTGRES_HOST: localhost 
+      POSTGRES_PORT: 5432
+    env_file:
+      - .env
+    networks: 
+      - mynetwork
+  backend:
+    build:
+      context: ../backend/foodgram
+      dockerfile: Dockerfile
+    volumes:
+      - static_value:/food/static
+      - media_value:/food/media
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "./manage.py collectstatic --noinput && ./manage.py migrate  && gunicorn -b 0.0.0.0:8080 food.wsgi:application"
+    env_file:
+      - .env
+    networks: 
+      - mynetwork
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+    networks: 
+      - mynetwork
   nginx:
     image: nginx:1.19.3
     ports:
-      - "80:80"
+      - "80:8080"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - static_value:/var/html/static
+      - media_value:/var/html/media
+    depends_on:
+      - backend
+      - frontend
+    networks: 
+      - mynetwork
+volumes:
+  static_value:
+  media_value:
+networks: 
+  mynetwork:

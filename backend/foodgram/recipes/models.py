@@ -1,26 +1,32 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 
 User = get_user_model()
 
 
 class Tag(models.Model):
     name = models.CharField(
+        'Тeг',
         max_length=200,
         unique=True,
-        verbose_name='Тeг',
         help_text='Название тeга',
     )
     color = models.CharField(
+        'Цвет в HEX',
         max_length=7,
-        verbose_name='Цвет в HEX',
         help_text='Цвет в HEX',
+        validators=(
+            RegexValidator(
+                regex=r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+                message='Нужен только HEX формат'
+            ),
+        )
     )
     slug = models.SlugField(
+        'Слаг',
         max_length=200,
         unique=True,
-        verbose_name='slug',
         help_text='slug',
     )
 
@@ -29,22 +35,28 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name
+        return self.name if len(self.name) < 10 else self.name[:10] + "..."
 
 
 class Ingredient(models.Model):
     name = models.CharField(
+        'Ингредиент',
         max_length=200,
-        verbose_name='Ингредиент',
     )
     measurement_unit = models.CharField(
+        'Единицы измерения',
         max_length=200,
-        verbose_name='Единицы измерения',
     )
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name="unique_ingredient"
+            ),
+        ]
 
     def __str__(self):
         return self.name
@@ -58,8 +70,8 @@ class Recipe(models.Model):
         verbose_name='Автор рецепта',
     )
     name = models.CharField(
+        'Название рецепта',
         max_length=200,
-        verbose_name='Название рецепта',
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -73,19 +85,20 @@ class Recipe(models.Model):
         verbose_name='Список id тегов',
     )
     image = models.ImageField(
-        blank=True,
-        verbose_name='Картинка, закодированная в Base64',
+        'Картинка, закодированная в Base64',
     )
     text = models.TextField(
-        verbose_name='Описание',
+        'Описание'
     )
-    cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
-        verbose_name='Время приготовления (в минутах)',
+    cooking_time = models.PositiveSmallIntegerField(
+        'Время приготовления (в минутах)',
+        validators=(
+            MinValueValidator(1),
+        ),
     )
     pub_date = models.DateTimeField(
+        'Дата публикации рецепта',
         auto_now_add=True,
-        verbose_name='Дата публикациирецепта',
     )
 
     class Meta:
@@ -109,17 +122,25 @@ class IngredientLink(models.Model):
         related_name='link_of_ingredients',
         verbose_name='Ингредиент',
     )
-    amount = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
-        verbose_name='Количество ингредиентов',
+    amount = models.PositiveSmallIntegerField(
+        'Количество ингредиентов',
+        validators=(
+            MinValueValidator(1),
+        ),
     )
 
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name="unique_ingredientlink"
+            ),
+        ]
 
     def __str__(self):
-        return f'{self.amount}'
+        return f'{self.recipe.name}, {self.ingredient.name}-{self.amount}'
 
 
 class Favorite(models.Model):
