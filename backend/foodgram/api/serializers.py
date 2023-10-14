@@ -221,6 +221,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
     cooking_time = serializers.IntegerField(read_only=True)
+    image = serializers.ImageField(read_only=True)
 
     class Meta:
         model = Recipe

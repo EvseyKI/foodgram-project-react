@@ -8,7 +8,7 @@ from recipes.models import Ingredient
 
 def method_to_create_ingredients(first_param, second_param):
     with open(os.path.join(os.path.dirname(__file__),
-                           '..', '..', '..', '..', 'data', 'ingredients.json'),
+                           '..', 'ingredients.json'),
               'r') as file:
         data = json.load(file)
         for item in data:
