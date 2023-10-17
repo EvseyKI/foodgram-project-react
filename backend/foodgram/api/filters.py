@@ -1,10 +1,7 @@
 import django_filters
-from django.db.models import Q
+from django_filters import rest_framework, FilterSet, filters
 
-from django_filters import rest_framework
-from django_filters import FilterSet
-
-from recipes.models import Ingredient, Recipe, ShoppingList, Favorite
+from recipes.models import Ingredient, Recipe, ShoppingList, Favorite, Tag
 
 
 class IngredientFilter(django_filters.FilterSet):
@@ -23,7 +20,10 @@ class RecipeFilter(FilterSet):
         field_name='shoppingcard__user', method='filter_is_in_shopping_cart')
     author = rest_framework.CharFilter(field_name='author__username',
                                        method='filter_author')
-    tags = rest_framework.CharFilter(method='filter_tags')
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all(),)
 
     class Meta:
         model = Recipe
@@ -49,12 +49,3 @@ class RecipeFilter(FilterSet):
                 user=request.user).values_list('recipe__pk', flat=True)
             return queryset.filter(pk__in=recipe_pk_list)
         return queryset
-
-    def filter_tags(self, queryset, name, value):
-        tags = self.request.query_params.getlist('tags')
-        if tags:
-            conditions = Q()
-            for tag in tags:
-                conditions |= Q(tags__slug__icontains=value)
-            return queryset.filter(conditions)
-        return queryset.none()
