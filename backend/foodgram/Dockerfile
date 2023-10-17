@@ -4,7 +4,6 @@ RUN pip install --upgrade pip
 RUN pip install gunicorn
 WORKDIR /food
 COPY requirements.txt .
-RUN python -m pip install --upgrade pip
 RUN pip install -r requirements.txt --no-cache-dir
 COPY . .
 RUN chmod +x manage.py

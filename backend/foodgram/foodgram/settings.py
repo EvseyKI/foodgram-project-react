@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -98,7 +99,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -136,16 +137,4 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
 }
 
-# DJOSER = {
-#     'LOGIN_FIELD': 'email',
-#     'SERIALIZERS': {
-#         'user_create': 'users.serializers.CreateUserSerializer',
-#         'user': 'users.serializers.CustomUserSerializer',
-#         'current_user': 'users.serializers.CustomUserSerializer',
-#     },
-#     'PERMISSIONS': {
-#         'user_create': ['rest_framework.permissions.AllowAny'],
-#         'user_list': ['rest_framework.permissions.AllowAny'],
-#         'user': ['rest_framework.permissions.AllowAny'],
-#     },
-# }
+MAX_LENGTH_NAME_TAG = 10

@@ -38,10 +38,13 @@ class UserSerializer(serializers.ModelSerializer):
         data = super(UserSerializer, self).to_representation(instance)
         request = self.context.get('request')
         if request and request.method == 'GET':
-            data['is_subscribed'] = Subscription.objects.filter(
-                user=self.context['request'].user,
-                author=instance
-            ).exists()
+            if self.context['request'].user.is_authenticated:
+                data['is_subscribed'] = Subscription.objects.filter(
+                    user=self.context['request'].user,
+                    author=instance
+                ).exists()
+            else:
+                data['is_subscribed'] = False
         else:
             data.pop('is_subscribed', None)
         return data
@@ -151,8 +154,11 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, instance):
         recipes = instance.recipes.all()
-        if self.context.get('recipes_limit'):
-            recipes = recipes[:int(self.context['recipes_limit'])]
+        recipes_limit = self.context['request'].query_params.get(
+            'recipes_limit'
+        )
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
         return SmallRecipeSerializer(recipes, many=True).data
 
     def get_recipes_count(self, instance):
@@ -208,11 +214,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).data
 
     def get_is_favorited(self, instance):
+        if not self.context['request'].user.is_authenticated:
+            return False
         return Favorite.objects.filter(
             recipe=instance, user=self.context['request'].user
         ).exists()
 
     def get_is_in_shopping_cart(self, instance):
+        if not self.context['request'].user.is_authenticated:
+            return False
         return ShoppingList.objects.filter(
             recipe=instance, user=self.context['request'].user
         ).exists()
@@ -314,8 +324,9 @@ class PostUpdateRecipeSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        if int(self.initial_data['cooking_time']) < 1:
-            raise ValidationError('Время приготовления должно бытьь > 1')
+        cooking_time = int(self.initial_data['cooking_time'])
+        if cooking_time < 1 or cooking_time > 500:
+            raise ValidationError('Время приготовления должно быть > 1 < 500')
         ingredients_pk = [obj['id'] for obj in
                           self.initial_data['ingredients']]
         if len(ingredients_pk) > len(set(ingredients_pk)):
@@ -326,6 +337,13 @@ class PostUpdateRecipeSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        recipe = Recipe.objects.filter(
+            name=self.validated_data['name'],
+            text=self.validated_data['text'],
+            cooking_time=self.validated_data['cooking_time'],
+        ).exists()
+        if recipe:
+            raise ValidationError('Рецепт уже существует')
         with transaction.atomic():
             obj = Recipe(
                 name=self.validated_data['name'],

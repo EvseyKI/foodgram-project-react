@@ -27,7 +27,6 @@ from users.models import (User, Subscription)
 
 
 class UserViewSet(ModelViewSet):
-    model = User
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -87,14 +86,12 @@ class CustomTokenCreateView(TokenCreateView):
 
 
 class TagViewSet(ModelViewSet):
-    model = Tag
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
 
 
 class IngredientViewSet(ModelViewSet):
-    model = Ingredient
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -103,36 +100,15 @@ class IngredientViewSet(ModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.all().order_by('-id')
     serializer_class = RecipeSerializer
-    permission_classes = (permissions.IsAuthenticated,
-                          IsAuthorPermissions,)
     filter_backends = (rest_framework.DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
-    def list(self, request):
-        if int(request.query_params.get('is_favorited', -1)) == 1:
-            recipes_id = Favorite.objects.filter(
-                user=request.user
-            ).values_list('recipe_id', flat=True)
-            self.queryset = self.queryset.filter(id__in=recipes_id)
-        if int(request.query_params.get('is_in_shopping_cart', -1)) == 1:
-            recipes_id = ShoppingList.objects.filter(
-                user=request.user
-            ).values_list('recipe_id', flat=True)
-            self.queryset = self.queryset.filter(id__in=recipes_id)
-        if request.query_params.get('author'):
-            self.queryset = self.queryset.filter(
-                author_id=int(request.query_params.get('author')))
-        if request.query_params.get('tags'):
-            filterr = Q()
-            for tag in self.request.query_params.getlist('tags'):
-                filterr |= Q(tags__slug__icontains=tag)
-            self.queryset = self.queryset.filter(filterr)
-        self.queryset = self.queryset.distinct()
-        return super().list(request)
-
     def create(self, request):
+        self.permission_classes = (permissions.IsAuthenticated,
+                                   IsAuthorPermissions,)
+        self.check_permissions(request)
         serializer = PostUpdateRecipeSerializer(data=request.data,
                                                 context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -142,6 +118,9 @@ class RecipeViewSet(ModelViewSet):
         ).data, status=status.HTTP_201_CREATED)
 
     def update(self, request, pk, *args, **kwargs):
+        self.permission_classes = (permissions.IsAuthenticated,
+                                   IsAuthorPermissions,)
+        self.check_permissions(request)
         obj = get_object_or_404(Recipe, pk=pk)
         self.check_object_permissions(request, obj)
         serializer = PostUpdateRecipeSerializer(obj, data=request.data,
@@ -150,6 +129,14 @@ class RecipeViewSet(ModelViewSet):
         recipe = serializer.save()
         return Response(
             RecipeSerializer(recipe, context={'request': request}).data)
+
+    def destroy(self, request, pk, *args, **kwargs):
+        self.permission_classes = (permissions.IsAuthenticated,
+                                   IsAuthorPermissions,)
+        self.check_permissions(request)
+        obj = get_object_or_404(Recipe,pk=pk)
+        self.check_object_permissions(request, obj)
+        return super().destroy(request)
 
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=[permissions.IsAuthenticated])

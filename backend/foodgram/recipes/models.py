@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import (MinValueValidator,
+                                    MaxValueValidator,
+                                    RegexValidator)
+
+from foodgram.settings import MAX_LENGTH_NAME_TAG
 
 User = get_user_model()
 
@@ -35,7 +39,8 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name if len(self.name) < 10 else self.name[:10] + "..."
+        return (self.name if len(self.name) < MAX_LENGTH_NAME_TAG
+                else self.name[:MAX_LENGTH_NAME_TAG] + "...")
 
 
 class Ingredient(models.Model):
@@ -94,6 +99,7 @@ class Recipe(models.Model):
         'Время приготовления (в минутах)',
         validators=(
             MinValueValidator(1),
+            MaxValueValidator(500),
         ),
     )
     pub_date = models.DateTimeField(
@@ -126,6 +132,7 @@ class IngredientLink(models.Model):
         'Количество ингредиентов',
         validators=(
             MinValueValidator(1),
+            MaxValueValidator(500),
         ),
     )
 

@@ -9,9 +9,7 @@ services:
     env_file:
       - .env
   backend:
-    build:
-      context: ../backend/foodgram
-      dockerfile: Dockerfile
+    image: evseykir/foodgram_backend
     volumes:
       - static_value:/food/static
       - media_value:/food/media
@@ -19,14 +17,10 @@ services:
       - db
     ports:
       - "8080:8080"
-    command: >
-      bash -c "./manage.py collectstatic --noinput && ./manage.py migrate  && gunicorn -b 0.0.0.0:8080 foodgram.wsgi"
     env_file:
       - .env
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: evseykir/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
   nginx:

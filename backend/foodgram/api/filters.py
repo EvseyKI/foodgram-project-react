@@ -9,11 +9,11 @@ from recipes.models import Ingredient, Recipe, ShoppingList, Favorite
 
 class IngredientFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name='name',
-                                     lookup_expr='icontains')
+                                     lookup_expr='istartswith')
 
     class Meta:
         model = Ingredient
-        fields = ['name']
+        fields = ('name',)
 
 
 class RecipeFilter(FilterSet):
@@ -27,7 +27,7 @@ class RecipeFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['is_favorited', 'is_in_shopping_cart', 'author', 'tags']
+        fields = ('is_favorited', 'is_in_shopping_cart', 'author', 'tags',)
 
     def filter_is_favorited(self, queryset, name, value):
         request = self.request
