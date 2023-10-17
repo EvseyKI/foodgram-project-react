@@ -2,8 +2,12 @@ version: '3.3'
 services:
   db:
     image: postgres:13.0-alpine
+    environment: 
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: love9268
+      POSTGRES_DB: evsey
     ports:
-      - '127.0.0.1:5432:5432'
+      - '5432:5432'
     volumes:
       - pg_data:/var/lib/postgresql/data/
     env_file:
