@@ -134,7 +134,7 @@ class RecipeViewSet(ModelViewSet):
         self.permission_classes = (permissions.IsAuthenticated,
                                    IsAuthorPermissions,)
         self.check_permissions(request)
-        obj = get_object_or_404(Recipe,pk=pk)
+        obj = get_object_or_404(Recipe, pk=pk)
         self.check_object_permissions(request, obj)
         return super().destroy(request)
 

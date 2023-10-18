@@ -48,5 +48,6 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author',)
     inlines = (IngredientLinkInline,)
 
+
 admin.site.unregister(Group)
 admin.site.unregister(TokenProxy)
