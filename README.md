@@ -11,7 +11,7 @@
 1. Клонируйте репозиторий на свой компьютер:
 
     ```
-    git clone https://github.com/devlili/foodgram-project-react.git
+    git clone https://github.com/account_name/foodgram-project-react.git
     ```
     ```
     cd foodgram-project-react
