@@ -88,7 +88,7 @@ cd foodgram-project-react
 2. Создайте файл .env в папке infra и заполните его своими данными.
 3. Находясь в папке infra, выполните команду ```docker-compose up```  
 Документация к API доступна по адресу http://localhost/api/docs/
-4. Выполните миграции, соберите статику
+4. Выполните миграции, соберите статику. Заполнение ингредиентов работает автоматически при выполнении миграции.
 ```
 docker compose -f docker-compose.yml up -d
 docker compose -f docker-compose.yml exec backend python manage.py migrate
