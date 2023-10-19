@@ -295,7 +295,7 @@ class ShoppingListSerializer(serializers.ModelSerializer):
 
 
 class PostUpdateRecipeSerializer(serializers.ModelSerializer):
-    image = serializers.CharField(required=True)
+    image = serializers.CharField(required=False)
     name = serializers.CharField(required=True)
     text = serializers.CharField(required=True)
     cooking_time = serializers.IntegerField(required=True)
@@ -367,7 +367,8 @@ class PostUpdateRecipeSerializer(serializers.ModelSerializer):
             instance.name = self.validated_data['name']
             instance.text = self.validated_data['text']
             instance.cooking_time = self.validated_data['cooking_time']
-            instance.image = self.convert_base64_to_image()
+            if self.validated_data['image']:
+                instance.image = self.convert_base64_to_image()
             instance.tags.set(self.validated_data['tags'])
             instance.save()
             for ingredient in IngredientLink.objects.filter(recipe=instance):

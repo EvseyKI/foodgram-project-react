@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django import forms
 from rest_framework.authtoken.models import TokenProxy
 
 from .models import (
@@ -9,11 +10,24 @@ from .models import (
 )
 
 
+class TagForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ('name', 'slug', 'color',)
+
+    def clean(self):
+        tag = Tag.objects.filter(color=self.cleaned_data['color'].upper())
+        if tag.exists():
+            raise forms.ValidationError('Тэг с таким цветом уже сущесвтует')
+        return self.cleaned_data
+
+
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'color', 'slug',)
     search_fields = ('name',)
     list_filter = ('slug',)
+    form = TagForm
 
 
 @admin.register(Ingredient)
@@ -40,6 +54,7 @@ class ShoppingListAdmin(admin.ModelAdmin):
 class IngredientLinkInline(admin.TabularInline):
     model = IngredientLink
     extra = 1
+    min_num = 1
 
 
 @admin.register(Recipe)
