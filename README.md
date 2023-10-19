@@ -100,6 +100,7 @@ docker compose -f docker-compose.yml exec backend python manage.py createsuperus
 ```
 
 ## Автор
-
+```
 Evsey Kirichkov
 Beginner python developer
+```
