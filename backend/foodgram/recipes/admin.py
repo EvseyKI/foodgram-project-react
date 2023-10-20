@@ -18,9 +18,26 @@ class TagForm(forms.ModelForm):
 
     def clean(self):
         tag = Tag.objects.filter(color=self.cleaned_data['color'].upper())
-        if tag.exists():
+        method = self.Meta.formfield_callback.keywords['request'].path_info
+        if tag.exists() and 'add' == method.split('/')[-2]:
             raise forms.ValidationError('Тэг с таким цветом уже сущесвтует')
         self.cleaned_data['color'] = self.cleaned_data['color'].upper()
+        return self.cleaned_data
+
+
+class RecipeForm(forms.ModelForm):
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+
+    def clean(self):
+        data_keys = self.data.keys()
+        count_delete = 0
+        for item in data_keys:
+            if 'DELETE' in item:
+                count_delete += 1
+        if count_delete == self.instance.link_of_ingredients.count():
+            raise ValidationError('Нельзя удалить все ингредиенты')
         return self.cleaned_data
 
 
@@ -64,16 +81,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'author',)
     search_fields = ('name', 'author',)
     inlines = (IngredientLinkInline,)
-
-    def save_formset(self, request, form, formset, change):
-        can_delete = False
-        for ingredient in formset.cleaned_data:
-            if not ingredient.get('DELETE', True):
-                can_delete = True
-                break
-        if not can_delete:
-            raise ValidationError('Нельзя удалить все ингредиенты')
-        return super().save_formset(request, form, formset, change)
+    form = RecipeForm
 
 
 admin.site.unregister(Group)
