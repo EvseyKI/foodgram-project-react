@@ -10,6 +10,13 @@ class SubscribeForm(forms.ModelForm):
         fields = ('user', 'author',)
 
     def clean(self):
+        subscribe = Subscription.objects.filter(
+            user=self.cleaned_data['user'],
+            author=self.cleaned_data['author']
+        )
+        if subscribe.exists():
+            raise forms.ValidationError(
+                'Подписка уже существует')
         if self.cleaned_data['user'] == self.cleaned_data['author']:
             raise forms.ValidationError(
                 'Хотел подписаться сам на себя? плак плак')

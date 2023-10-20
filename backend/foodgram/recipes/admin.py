@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django import forms
+from django.core.exceptions import ValidationError
 from rest_framework.authtoken.models import TokenProxy
 
 from .models import (
@@ -19,6 +20,7 @@ class TagForm(forms.ModelForm):
         tag = Tag.objects.filter(color=self.cleaned_data['color'].upper())
         if tag.exists():
             raise forms.ValidationError('Тэг с таким цветом уже сущесвтует')
+        self.cleaned_data['color'] = self.cleaned_data['color'].upper()
         return self.cleaned_data
 
 
@@ -62,6 +64,16 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'author',)
     search_fields = ('name', 'author',)
     inlines = (IngredientLinkInline,)
+
+    def save_formset(self, request, form, formset, change):
+        can_delete = False
+        for ingredient in formset.cleaned_data:
+            if not ingredient.get('DELETE', True):
+                can_delete = True
+                break
+        if not can_delete:
+            raise ValidationError('Нельзя удалить все ингредиенты')
+        return super().save_formset(request, form, formset, change)
 
 
 admin.site.unregister(Group)
