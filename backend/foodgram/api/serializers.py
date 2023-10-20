@@ -365,7 +365,7 @@ class PostUpdateRecipeSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         with transaction.atomic():
             instance.name = self.validated_data['name']
-            instance.text = self.validated_data['text'] 
+            instance.text = self.validated_data['text']
             instance.cooking_time = self.validated_data['cooking_time']
             if self.validated_data.get('image'):
                 instance.image = self.convert_base64_to_image()
